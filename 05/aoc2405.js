@@ -7,7 +7,7 @@ function parse(data) {
 	const [ruleLines,pageLines] = 
 		al.arraySplit(
 			al.textToLines(data),
-			l=>!l.length
+			l=>!l.length // an empty-line is our split condition
 		);
 
 	// helper list-append-or-create-on-empty
@@ -31,7 +31,7 @@ function parse(data) {
 	// (Pro-tip, this algo can be used for dependency ordering if
 	//  performance isn't a top priority)
 	const fixer = fix => pages => {
-			// keep in memory if we've failed.
+			// keep in memory if we've failed this pattern at any time.
 			let wasOk = true;
 			while(true) {
 				let nextPages = null;
@@ -40,6 +40,8 @@ function parse(data) {
 						const succ=rules.get(page);
 						const isOk = undefined===state.prev.find(pp=>succ?.find(inSucc=>inSucc===pp))
 						if (fix && !isOk) {
+							// we failed, make a suggestion for the next iteration
+							// with this page shunted to the top
 							nextPages = [page,...pages.filter((t,pi)=>pi!=pageIdx)] 
 							//console.log("np:",nextPages);
 						}
@@ -51,10 +53,14 @@ function parse(data) {
 					{prev:[],ok:true}
 				)
 				if (!fix)
-					return checked;
+					return checked; // p1 has no fixing so we just return the status
+				
+				// success?
 				if (checked.ok)
 					return {...checked,ok:wasOk}
+				// unsuccessful, try the next suggestion (from the loop)
 				pages=nextPages;
+				// first iteration failed, that means the result will be a fixed one
 				wasOk = false;
 			}
 		}
@@ -68,6 +74,7 @@ function a(data) {
 		pagesets
 		.map(pages=>checker(pages))
 		.filter(info=>info.ok);
+	// pick the correct sets only and find the middle index
 	return okInfos.reduce((acc,info)=>acc+info.prev[0|(info.prev.length/2)],0)
 }
 function b(data) {
@@ -76,6 +83,7 @@ function b(data) {
 		pagesets
 		.map(pages=>fixer(true)(pages))
 		.filter(info=>!info.ok);
+	// pick the correct-ed sets only and find the middle index
 	return badInfos.reduce((acc,info)=>acc+info.prev[0|(info.prev.length/2)],0);
 }
 

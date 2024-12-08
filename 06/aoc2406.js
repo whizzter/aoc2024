@@ -1,6 +1,20 @@
 const fs = require("fs");
 const al = require("../aoclib.js")
 
+// Lots of small details in the impl, guessed wrong at part2 when
+// making part 1 so the abstractions weren't the correct ones
+// (although easily enough to hack around)
+
+// P1 consisted of making a guard iterable(guessed p2 was about multiple guards)
+//  that would walk until going out of bounds, original code marked with 
+// ; for start and : for passed squares, then the final code counted those.
+
+// P2 with the loop finding required some hacking to reset guard/maps since
+// it was multiple walks that were intended.
+// The guard-walk was rewritten to encode passed tiles with the bit(s) of the
+// directions the guard had walked over that square, encoded tiles were
+// simply using lower-case a-p characters.
+
 const dirToIndex = (dx,dy) => (-dx+2)*!dy+(dy+1)*!dx;
 
 const charToBits = cv=>{
